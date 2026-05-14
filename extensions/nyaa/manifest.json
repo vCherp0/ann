@@ -8,5 +8,5 @@
   "nsfw": true,
   "language": "en",
   "icon": "https://nyaa.si/static/favicon.png",
-  "main": ""
+  "main": "https://raw.githubusercontent.com/vCherp0/ann/main/extensions/nyaa/main.js"
 }
