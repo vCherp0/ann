@@ -1,70 +1,80 @@
 const BASE_URL = 'https://nyaa.si';
 
-async function batch(query, page = 1) {
+export const regex = /nyaa\.si/;
+export function test(url) {
+    return regex.test(url);
+}
+
+export async function batch(query, page = 1) {
     try {
         const url = `${BASE_URL}/?f=0&c=1_2&q=${encodeURIComponent(query)}&p=${page}`;
         const response = await fetch(url);
         const html = await response.text();
 
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const rows = doc.querySelectorAll('table.torrent-list tbody tr');
-        
         const results = [];
+        const rows = html.split('<tr class="'); 
+        
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            
+            if (!row.includes('magnet:?xt=')) continue;
 
-        for (const row of rows) {
-            const links = row.querySelectorAll('td[colspan="2"] a:not(.comments)');
-            const titleElement = links[links.length - 1];
-            
-            const name = titleElement ? (titleElement.title || titleElement.textContent.trim()) : "";
-            const link = row.querySelector('a[href^="magnet:"]')?.getAttribute('href') || "";
-            const id = titleElement?.getAttribute('href')?.split('/').pop() || "";
-            
-            const size = row.querySelector('td:nth-last-child(4)')?.textContent?.trim() || "0 MB";
-            const date = row.querySelector('td:nth-last-child(5)')?.textContent?.trim() || "";
-            const seeds = row.querySelector('td:nth-last-child(3)')?.textContent?.trim() || "0";
-            const peers = row.querySelector('td:nth-last-child(2)')?.textContent?.trim() || "0";
+            const titleMatch = row.match(/title="([^"]+)"/);
+            const name = titleMatch ? titleMatch[1] : "Unknown Anime";
+
+            const magnetMatch = row.match(/href="(magnet:\?xt=[^"]+)"/);
+            const link = magnetMatch ? magnetMatch[1] : "";
+
+            const idMatch = row.match(/\/view\/(\d+)/);
+            const id = idMatch ? idMatch[1] : "";
+
+            const tdRegex = /<td[^>]*>(.*?)<\/td>/g;
+            let tds = [];
+            let match;
+            while ((match = tdRegex.exec(row)) !== null) {
+                tds.push(match[1].replace(/<[^>]+>/g, '').trim());
+            }
 
             if (name && link) {
                 results.push({
                     id: id,
                     name: name,
                     link: link,
-                    seeds: parseInt(seeds) || 0,
-                    peers: parseInt(peers) || 0,
-                    size: size,
-                    date: date,
+                    size: tds[3] || "Unknown",
+                    date: tds[4] || "",
+                    seeds: parseInt(tds[5]) || 0,
+                    peers: parseInt(tds[6]) || 0,
                     image: 'https://nyaa.si/static/favicon.png'
                 });
             }
         }
 
-        return results;
+        return results; 
     } catch (e) {
         console.error("Batch search failed:", e);
         return [];
     }
 }
 
-async function single(id) {
+export async function single(id) {
     try {
         const url = `${BASE_URL}/view/${id}`;
         const response = await fetch(url);
         const html = await response.text();
         
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        const title = doc.querySelector('h3.panel-title')?.textContent.trim() || "Unknown";
-        const magnet = doc.querySelector('a[href^="magnet:"]')?.getAttribute('href') || "";
+        const titleMatch = html.match(/<h3 class="panel-title">([^<]+)<\/h3>/);
+        const name = titleMatch ? titleMatch[1].trim() : "Unknown";
+
+        const magnetMatch = html.match(/href="(magnet:\?xt=[^"]+)"/);
+        const link = magnetMatch ? magnetMatch[1] : "";
 
         return {
-            name: title,
-            description: "",
+            name: name,
+            description: "Scraped from Nyaa.si",
             episodes: [
                 {
                     name: "Torrent",
-                    urls: [{ name: "Magnet Link", url: magnet }]
+                    urls: [{ name: "Magnet Link", url: link }] 
                 }
             ]
         };
@@ -77,7 +87,3 @@ async function single(id) {
         };
     }
 }
-
-// Exporting as both named and default to satisfy any loader Hayase might be using
-export { batch, single };
-export default { batch, single };
