@@ -1,6 +1,6 @@
 const BASE_URL = 'https://nyaa.si';
 
-export async function batch(query, page = 1) {
+async function batch(query, page = 1) {
     try {
         const url = `${BASE_URL}/?f=0&c=1_2&q=${encodeURIComponent(query)}&p=${page}`;
         const response = await fetch(url);
@@ -41,11 +41,12 @@ export async function batch(query, page = 1) {
 
         return results;
     } catch (e) {
+        console.error("Batch search failed:", e);
         return [];
     }
 }
 
-export async function single(id) {
+async function single(id) {
     try {
         const url = `${BASE_URL}/view/${id}`;
         const response = await fetch(url);
@@ -68,6 +69,7 @@ export async function single(id) {
             ]
         };
     } catch (e) {
+        console.error("Single detail failed:", e);
         return { 
             name: "", 
             description: "", 
@@ -75,3 +77,7 @@ export async function single(id) {
         };
     }
 }
+
+// Exporting as both named and default to satisfy any loader Hayase might be using
+export { batch, single };
+export default { batch, single };
