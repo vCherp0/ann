@@ -6,38 +6,31 @@ export async function search(query, page = 1) {
         const response = await fetch(url);
         const html = await response.text();
 
-        if (!html) return { results: [], hasMore: false };
-
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const rows = doc.querySelectorAll('table.torrent-list tbody tr');
         
-        if (!rows || rows.length === 0) {
-            return { results: [], hasMore: false };
-        }
+        const results = [];
 
-        const results = Array.from(rows).map(row => {
+        for (const row of rows) {
             const links = row.querySelectorAll('td[colspan="2"] a:not(.comments)');
             const titleElement = links[links.length - 1];
             const magnetLink = row.querySelector('a[href^="magnet:"]')?.getAttribute('href') || "";
             const id = titleElement?.getAttribute('href')?.split('/').pop() || "";
             const seeders = row.querySelector('td:nth-last-child(3)')?.textContent?.trim() || "0";
 
-            return {
+            results.push({
                 id: id,
                 title: titleElement ? (titleElement.title || titleElement.textContent.trim()) : "Unknown",
                 url: magnetLink,
                 subtitle: `Seeders: ${seeders}`,
                 image: 'https://nyaa.si/static/favicon.png' 
-            };
-        });
+            });
+        }
 
-        return {
-            results: results,
-            hasMore: !!doc.querySelector('ul.pagination li.next:not(.disabled)')
-        };
+        return results;
     } catch (e) {
-        return { results: [], hasMore: false };
+        return [];
     }
 }
 
