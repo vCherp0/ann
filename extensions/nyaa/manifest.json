@@ -1,9 +1,9 @@
 {
   "id": "si.nyaa.hayase",
   "name": "Nyaa.si",
-  "version": "1.0.1",
-  "description": "nyaa",
-  "author": "YourName",
+  "version": "1.0.2",
+  "description": "Nya",
+  "author": "noone",
   "type": "anime",
   "nsfw": true,
   "language": "en",
