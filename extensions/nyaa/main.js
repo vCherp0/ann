@@ -15,21 +15,28 @@ export async function search(query, page = 1) {
         for (const row of rows) {
             const links = row.querySelectorAll('td[colspan="2"] a:not(.comments)');
             const titleElement = links[links.length - 1];
-            const magnetLink = row.querySelector('a[href^="magnet:"]')?.getAttribute('href') || "";
+            
+            const name = titleElement ? (titleElement.title || titleElement.textContent.trim()) : "";
+            const link = row.querySelector('a[href^="magnet:"]')?.getAttribute('href') || "";
             const id = titleElement?.getAttribute('href')?.split('/').pop() || "";
-            const seeders = row.querySelector('td:nth-last-child(3)')?.textContent?.trim() || "0";
-            const leechers = row.querySelector('td:nth-last-child(2)')?.textContent?.trim() || "0";
-            const size = row.querySelector('td:nth-last-child(4)')?.textContent?.trim() || "0";
+            
+            const size = row.querySelector('td:nth-last-child(4)')?.textContent?.trim() || "0 MB";
+            const date = row.querySelector('td:nth-last-child(5)')?.textContent?.trim() || "";
+            const seeds = row.querySelector('td:nth-last-child(3)')?.textContent?.trim() || "0";
+            const peers = row.querySelector('td:nth-last-child(2)')?.textContent?.trim() || "0";
 
-            results.push({
-                id: id,
-                name: titleElement ? (titleElement.title || titleElement.textContent.trim()) : "Unknown",
-                url: magnetLink,
-                seeders: parseInt(seeders) || 0,
-                leechers: parseInt(leechers) || 0,
-                size: size,
-                image: 'https://nyaa.si/static/favicon.png'
-            });
+            if (name && link) {
+                results.push({
+                    id: id,
+                    name: name,
+                    link: link,
+                    seeds: parseInt(seeds) || 0,
+                    peers: parseInt(peers) || 0,
+                    size: size,
+                    date: date,
+                    image: 'https://nyaa.si/static/favicon.png'
+                });
+            }
         }
 
         return results;
