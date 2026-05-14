@@ -19,14 +19,14 @@ export async function search(query, page = 1) {
             const id = titleElement?.getAttribute('href')?.split('/').pop() || "";
             const seeders = row.querySelector('td:nth-last-child(3)')?.textContent?.trim() || "0";
             const leechers = row.querySelector('td:nth-last-child(2)')?.textContent?.trim() || "0";
-            const size = row.querySelector('td:nth-last-child(4)')?.textContent?.trim() || "Unknown";
+            const size = row.querySelector('td:nth-last-child(4)')?.textContent?.trim() || "0";
 
             results.push({
                 id: id,
-                title: titleElement ? (titleElement.title || titleElement.textContent.trim()) : "Unknown",
+                name: titleElement ? (titleElement.title || titleElement.textContent.trim()) : "Unknown",
                 url: magnetLink,
-                seeders: parseInt(seeders),
-                leechers: parseInt(leechers),
+                seeders: parseInt(seeders) || 0,
+                leechers: parseInt(leechers) || 0,
                 size: size,
                 image: 'https://nyaa.si/static/favicon.png'
             });
@@ -51,18 +51,18 @@ export async function getDetails(id) {
         const magnet = doc.querySelector('a[href^="magnet:"]')?.getAttribute('href') || "";
 
         return {
-            title: title,
+            name: title,
             description: "",
             episodes: [
                 {
-                    title: "Torrent",
+                    name: "Torrent",
                     urls: [{ name: "Magnet Link", url: magnet }]
                 }
             ]
         };
     } catch (e) {
         return { 
-            title: "", 
+            name: "", 
             description: "", 
             episodes: [] 
         };
