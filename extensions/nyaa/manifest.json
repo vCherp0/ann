@@ -1,0 +1,12 @@
+{
+  "id": "si.nyaa.hayase",
+  "name": "Nyaa.si",
+  "version": "1.0.1",
+  "description": "nyaa",
+  "author": "YourName",
+  "type": "anime",
+  "nsfw": true,
+  "language": "en",
+  "icon": "https://nyaa.si/static/favicon.png",
+  "main": "main.js"
+}
