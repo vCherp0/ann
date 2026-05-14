@@ -1,12 +1,19 @@
-{
-  "id": "si.nyaa.hayase",
-  "name": "Nyaa.si",
-  "version": "1.0.2",
-  "description": "Nya",
-  "author": "noone",
-  "type": "anime",
-  "nsfw": true,
-  "language": "en",
-  "icon": "https://nyaa.si/static/favicon.png",
-  "main": "https://raw.githubusercontent.com/vCherp0/ann/main/extensions/nyaa/main.js"
-}
+[
+  {
+    "manifestVersion": 2,
+    "deprecated": false,
+    "name": "Nyaa.si",
+    "id": "si.nyaa.hayase",
+    "version": "1.0.5",
+    "type": "torrent",
+    "accuracy": "high",
+    "updatePeers": true,
+    "ratio": 0,
+    "media": "both",
+    "languages": ["US", "JP"],
+    "url": "aHR0cHM6Ly9ueWFhLnNp",
+    "icon": "https://nyaa.si/static/favicon.png",
+    "update": "https://raw.githubusercontent.com/vCherp0/ann/main/extensions/nyaa/manifest.json",
+    "code": "https://raw.githubusercontent.com/vCherp0/ann/main/extensions/nyaa/main.js"
+  }
+]
