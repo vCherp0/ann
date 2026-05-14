@@ -1,62 +1,60 @@
-const BASE_URL = 'https://nyaa.si';
+const QUALITIES = [ "1080", "720", "540", "480" ];
 
-export async function search(query, page = 1) {
+export default new class Tosho {
+  url=atob("aHR0cHM6Ly9mZWVkLmFuaW1ldG9zaG8ueHl6L2pzb24=");
+  _buildQuery({resolution: resolution, exclusions: exclusions}) {
+    if (!exclusions?.length && !resolution) return "";
+    const base = `&qx=1&q=!("${exclusions.join('"|"')}")`;
+    if (!resolution) return base;
+    return base + `!(*${QUALITIES.filter(q => q !== resolution).join("*|*")}*)`;
+  }
+  map(entries, batch = !1, useTorrent = !1) {
+    return entries.map(entry => ({
+      title: entry.title || entry.torrent_name,
+      link: useTorrent ? entry.torrent_url : entry.magnet_uri,
+      seeders: (entry.seeders || 0) >= 3e4 ? 0 : entry.seeders || 0,
+      leechers: (entry.leechers || 0) >= 3e4 ? 0 : entry.leechers || 0,
+      downloads: entry.torrent_downloaded_count || 0,
+      hash: entry.info_hash,
+      size: entry.total_size,
+      accuracy: entry.anidb_fid && !batch ? "high" : "medium",
+      type: batch ? "batch" : void 0,
+      date: new Date(1e3 * entry.timestamp)
+    }));
+  }
+  async single({anidbEid: anidbEid, resolution: resolution, exclusions: exclusions}, options) {
+    if (!navigator.onLine) return [];
+    if (!anidbEid) throw new Error("No anidbEid provided");
+    const query = this._buildQuery({
+      resolution: resolution,
+      exclusions: exclusions
+    }), res = await fetch(this.url + "?eid=" + anidbEid + query), data = await res.json();
+    return data.length ? this.map(data, !1, options?.useTorrent) : [];
+  }
+  async batch({anidbAid: anidbAid, resolution: resolution, exclusions: exclusions, episode: episode}, options) {
+    if (!navigator.onLine) return [];
+    if (!anidbAid) throw new Error("No anidbAid provided");
+    const query = this._buildQuery({
+      resolution: resolution,
+      exclusions: exclusions
+    }), res = await fetch(this.url + "?order=size-d&aid=" + anidbAid + query), data = (await res.json()).filter(entry => entry.num_files >= Math.min(24, Math.max(2, episode ?? 1)));
+    return data.length ? this.map(data, !0, options?.useTorrent) : [];
+  }
+  async movie({anidbAid: anidbAid, resolution: resolution, exclusions: exclusions}, options) {
+    if (!navigator.onLine) return [];
+    if (!anidbAid) throw new Error("No anidbAid provided");
+    const query = this._buildQuery({
+      resolution: resolution,
+      exclusions: exclusions
+    }), res = await fetch(this.url + "?aid=" + anidbAid + query), data = await res.json();
+    return data.length ? this.map(data, !1, options?.useTorrent) : [];
+  }
+  async test() {
     try {
-        const url = `${BASE_URL}/?f=0&c=1_2&q=${encodeURIComponent(query)}&p=${page}`;
-        const response = await fetch(url);
-        const html = await response.text();
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        const rows = doc.querySelectorAll('table.torrent-list tbody tr');
-        
-        const results = [];
-
-        for (const row of rows) {
-            const links = row.querySelectorAll('td[colspan="2"] a:not(.comments)');
-            const titleElement = links[links.length - 1];
-            const magnetLink = row.querySelector('a[href^="magnet:"]')?.getAttribute('href') || "";
-            const id = titleElement?.getAttribute('href')?.split('/').pop() || "";
-            const seeders = row.querySelector('td:nth-last-child(3)')?.textContent?.trim() || "0";
-
-            results.push({
-                id: id,
-                title: titleElement ? (titleElement.title || titleElement.textContent.trim()) : "Unknown",
-                url: magnetLink,
-                subtitle: `Seeders: ${seeders}`,
-                image: 'https://nyaa.si/static/favicon.png' 
-            });
-        }
-
-        return results;
-    } catch (e) {
-        return [];
+      if (!(await fetch(this.url)).ok) throw new Error(`Failed to load data from ${this.url}! Is the site down?`);
+      return !0;
+    } catch (error) {
+      throw new Error(`Could not reach ${this.url}! Does the site work in your region?`);
     }
-}
-
-export async function getDetails(id) {
-    try {
-        const url = `${BASE_URL}/view/${id}`;
-        const response = await fetch(url);
-        const html = await response.text();
-        
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        const title = doc.querySelector('h3.panel-title')?.textContent.trim() || "Unknown";
-        const magnet = doc.querySelector('a[href^="magnet:"]')?.getAttribute('href') || "";
-
-        return {
-            title: title,
-            description: "",
-            episodes: [
-                {
-                    title: title,
-                    urls: [{ name: "Magnet", url: magnet }]
-                }
-            ]
-        };
-    } catch (e) {
-        return { title: "", description: "", episodes: [] };
-    }
-}
+  }
+};
