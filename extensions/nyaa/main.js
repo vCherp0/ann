@@ -1,11 +1,10 @@
 const BASE_URL = 'https://nyaa.si';
 
-export const regex = /nyaa\.si/;
-export function test(url) {
-    return regex.test(url);
-}
+const test = (url) => {
+    return /nyaa\.si/.test(url);
+};
 
-export async function batch(query, page = 1) {
+const batch = async (query, page = 1) => {
     try {
         const url = `${BASE_URL}/?f=0&c=1_2&q=${encodeURIComponent(query)}&p=${page}`;
         const response = await fetch(url);
@@ -16,11 +15,10 @@ export async function batch(query, page = 1) {
         
         for (let i = 1; i < rows.length; i++) {
             const row = rows[i];
-            
             if (!row.includes('magnet:?xt=')) continue;
 
             const titleMatch = row.match(/title="([^"]+)"/);
-            const name = titleMatch ? titleMatch[1] : "Unknown Anime";
+            const name = titleMatch ? titleMatch[1] : "Unknown";
 
             const magnetMatch = row.match(/href="(magnet:\?xt=[^"]+)"/);
             const link = magnetMatch ? magnetMatch[1] : "";
@@ -48,15 +46,13 @@ export async function batch(query, page = 1) {
                 });
             }
         }
-
         return results; 
     } catch (e) {
-        console.error("Batch search failed:", e);
         return [];
     }
-}
+};
 
-export async function single(id) {
+const single = async (id) => {
     try {
         const url = `${BASE_URL}/view/${id}`;
         const response = await fetch(url);
@@ -79,11 +75,8 @@ export async function single(id) {
             ]
         };
     } catch (e) {
-        console.error("Single detail failed:", e);
-        return { 
-            name: "", 
-            description: "", 
-            episodes: [] 
-        };
+        return { name: "", description: "", episodes: [] };
     }
-}
+};
+
+export { test, batch, single };
